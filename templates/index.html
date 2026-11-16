@@ -1,0 +1,338 @@
+{% extends 'base.html' %}
+
+{% block title %}StayNest | Handpicked Hotels & Resorts Across India{% endblock %}
+
+{% block content %}
+<!-- ================= Hero Section with Big Search Bar ================= -->
+<section class="hero-section">
+  <div class="container">
+    <div class="row align-items-center">
+      <div class="col-lg-10 mx-auto text-center">
+        <span
+          class="badge bg-white text-danger border border-danger-subtle px-3 py-2 rounded-pill fw-semibold mb-3 shadow-sm">
+          <i class="bi bi-patch-check-fill me-1"></i> 20 Handpicked Verified Stays
+        </span>
+        <h1 class="hero-title mb-3">Find stays that feel like home, across India</h1>
+        <p class="hero-subtitle mx-auto">
+          From tranquil backwaters in Kerala to royal havelis in Jaipur and snow chalets in Manali — book verified stays
+          at honest Indian prices.
+        </p>
+
+        <!-- Big Search Bar Card -->
+        <div class="hero-search-card text-start">
+          <form action="{{ url_for('search') }}" method="GET">
+            <div class="row g-3 align-items-end">
+              <!-- Destination Field -->
+              <div class="col-lg-4 col-md-6">
+                <label class="search-label" for="heroCity">
+                  <i class="bi bi-geo-alt text-danger"></i> Destination
+                </label>
+                <div class="search-input-wrap">
+                  <select name="city" id="heroCity" class="form-select">
+                    <option value="">Anywhere in India</option>
+                    {% for c in cities %}
+                    <option value="{{ c['city'] }}" {% if selected_city==c['city'] %}selected{% endif %}>
+                      {{ c['city'] }} ({{ c['count'] }} stays)
+                    </option>
+                    {% endfor %}
+                  </select>
+                </div>
+              </div>
+
+              <!-- Check-In Date -->
+              <div class="col-lg-2 col-md-6 col-6">
+                <label class="search-label" for="heroCheckIn">
+                  <i class="bi bi-calendar-event text-danger"></i> Check-in
+                </label>
+                <div class="search-input-wrap">
+                  <input type="date" name="check_in" id="heroCheckIn" class="form-control">
+                </div>
+              </div>
+
+              <!-- Check-Out Date -->
+              <div class="col-lg-2 col-md-6 col-6">
+                <label class="search-label" for="heroCheckOut">
+                  <i class="bi bi-calendar-check text-danger"></i> Check-out
+                </label>
+                <div class="search-input-wrap">
+                  <input type="date" name="check_out" id="heroCheckOut" class="form-control">
+                </div>
+              </div>
+
+              <!-- Guests Selector -->
+              <div class="col-lg-2 col-md-6">
+                <label class="search-label" for="heroGuests">
+                  <i class="bi bi-people text-danger"></i> Guests
+                </label>
+                <div class="search-input-wrap">
+                  <select name="guests" id="heroGuests" class="form-select">
+                    <option value="1">1 Guest</option>
+                    <option value="2" selected>2 Guests</option>
+                    <option value="3">3 Guests</option>
+                    <option value="4">4+ Guests</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- Search Button -->
+              <div class="col-lg-2 col-md-6">
+                <button type="submit" class="btn btn-primary-staynest w-100 btn-hero-search">
+                  <i class="bi bi-search"></i>
+                  <span>Search</span>
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ================= Main Content Container ================= -->
+<div class="container py-5">
+
+  <!-- Quick Destination Pills Filter -->
+  <div class="d-flex align-items-center justify-content-between mb-2">
+    <h5 class="fw-bold mb-0 text-dark">
+      <i class="bi bi-compass text-danger me-2"></i>Explore by City
+    </h5>
+    <a href="{{ url_for('search') }}" class="text-decoration-none small text-danger fw-semibold">
+      All Filters <i class="bi bi-sliders ms-1"></i>
+    </a>
+  </div>
+
+  <div class="city-pill-strip mb-4">
+    <a href="{{ url_for('index') }}" class="city-pill {% if not selected_city %}active{% endif %}">
+      <i class="bi bi-grid-fill"></i> All Stays ({{ hotels|length if not selected_city else 20 }})
+    </a>
+    {% for c in cities %}
+    <a href="{{ url_for('index', city=c['city']) }}"
+      class="city-pill {% if selected_city == c['city'] %}active{% endif %}">
+      <i class="bi bi-geo-alt"></i> {{ c['city'] }} ({{ c['count'] }})
+    </a>
+    {% endfor %}
+  </div>
+
+  <!-- Hotels Section Header -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+    <div>
+      <h3 class="fw-bold mb-1">
+        {% if selected_city %}
+        Stays in {{ selected_city }}
+        {% else %}
+        Featured Stays Across India
+        {% endif %}
+      </h3>
+      <p class="text-muted small mb-0">
+        Showing {{ hotels|length }} verified hotel{{ 's' if hotels|length != 1 else '' }} with guest-rated hospitality.
+      </p>
+    </div>
+
+    <div class="d-flex align-items-center gap-2">
+      <span class="text-muted small">Need specific amenities or pricing?</span>
+      <a href="{{ url_for('search', city=selected_city if selected_city else '') }}"
+        class="btn btn-sm btn-outline-staynest">
+        <i class="bi bi-funnel me-1"></i> Detailed Filters
+      </a>
+    </div>
+  </div>
+
+  <!-- Hotel Cards Grid -->
+  {% if hotels %}
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+    {% for hotel in hotels %}
+    <div class="col">
+      <div class="hotel-card">
+        <!-- Image Wrapper -->
+        <div class="hotel-card-img-wrap">
+          <a href="{{ url_for('hotel_detail', hotel_id=hotel['id']) }}">
+            <img src="{{ hotel['image_main'] }}" alt="{{ hotel['name'] }}" class="hotel-card-img" loading="lazy"
+              onerror="this.onerror=null;this.src='/static/images/hotel_placeholder.svg';">
+          </a>
+          <span class="hotel-city-badge">
+            <i class="bi bi-geo-alt-fill me-1"></i>{{ hotel['city'] }}
+          </span>
+        </div>
+
+        <!-- Card Body -->
+        <div class="hotel-card-body">
+          <!-- Title & Rating -->
+          <div class="d-flex justify-content-between align-items-start mb-1">
+            <h5 class="fw-bold mb-0 text-truncate" style="max-width: 72%;">
+              <a href="{{ url_for('hotel_detail', hotel_id=hotel['id']) }}"
+                class="text-dark text-decoration-none hover-primary">
+                {{ hotel['name'] }}
+              </a>
+            </h5>
+            <div class="hotel-rating-badge">
+              <i class="bi bi-star-fill rating-star"></i>
+              <span>{{ "%.1f"|format(hotel['rating']) }}</span>
+              <span class="text-muted fw-normal small">({{ hotel['review_count'] }})</span>
+            </div>
+          </div>
+
+          <!-- Address -->
+          <p class="text-muted small mb-2 text-truncate">
+            <i class="bi bi-signpost-2 me-1"></i>{{ hotel['address'] }}
+          </p>
+
+          <!-- Amenities Tags Preview -->
+          <div class="d-flex flex-wrap gap-1 mb-3">
+            {% for amenity in hotel['amenities'].split(',')[:3] %}
+            <span class="amenity-tag">
+              {% if 'WiFi' in amenity %}
+              <i class="bi bi-wifi text-secondary"></i>
+              {% elif 'Pool' in amenity %}
+              <i class="bi bi-water text-primary"></i>
+              {% elif 'AC' in amenity %}
+              <i class="bi bi-snow text-info"></i>
+              {% elif 'Breakfast' in amenity %}
+              <i class="bi bi-cup-hot text-warning"></i>
+              {% elif 'Mountain' in amenity or 'View' in amenity %}
+              <i class="bi bi-image text-success"></i>
+              {% elif 'Beach' in amenity %}
+              <i class="bi bi-umbrella text-warning"></i>
+              {% elif 'Spa' in amenity %}
+              <i class="bi bi-flower1 text-danger"></i>
+              {% else %}
+              <i class="bi bi-check2-circle text-muted"></i>
+              {% endif %}
+              {{ amenity.strip() }}
+            </span>
+            {% endfor %}
+            {% if hotel['amenities'].split(',')|length > 3 %}
+            <span class="amenity-tag text-muted">
+              +{{ hotel['amenities'].split(',')|length - 3 }} more
+            </span>
+            {% endif %}
+          </div>
+
+          <!-- Pricing and Action Button -->
+          <div class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top">
+            <div>
+              <span class="hotel-price-text">₹{{ "{:,}".format(hotel['price_per_night']) }}</span>
+              <span class="hotel-price-period">/ night</span>
+            </div>
+            <a href="{{ url_for('hotel_detail', hotel_id=hotel['id']) }}"
+              class="btn btn-sm btn-outline-staynest fw-semibold">
+              View Details <i class="bi bi-arrow-right ms-1"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <!-- Empty State if no hotels found -->
+  <div class="empty-state">
+    <div class="empty-state-icon">
+      <i class="bi bi-building-x"></i>
+    </div>
+    <h4 class="fw-bold mb-2">No Stays Found for this Destination</h4>
+    <p class="text-muted mb-4">We couldn't find any stays in this city. Try exploring Goa, Jaipur, Manali, Mumbai, or
+      Kerala.</p>
+    <a href="{{ url_for('index') }}" class="btn btn-primary-staynest">
+      Browse All Stays
+    </a>
+  </div>
+  {% endif %}
+
+  <!-- ================= Value Proposition Section ================= -->
+  <section class="mt-5 pt-4">
+    <div class="p-4 p-md-5 bg-white border rounded-4 shadow-sm">
+      <div class="text-center mb-4">
+        <span class="text-danger fw-bold small text-uppercase tracking-wider">The StayNest Promise</span>
+        <h3 class="fw-bold mt-1">Why travelers love booking with StayNest</h3>
+      </div>
+      <div class="row g-4 text-start">
+        <div class="col-md-4">
+          <div class="d-flex gap-3">
+            <div class="flex-shrink-0">
+              <div class="d-inline-flex p-3 rounded-3 bg-danger bg-opacity-10 text-danger fs-4">
+                <i class="bi bi-shield-fill-check"></i>
+              </div>
+            </div>
+            <div>
+              <h5 class="fw-bold mb-1">Handpicked & Verified</h5>
+              <p class="text-muted small mb-0">Every single stay is curated with authentic photos, verified amenities,
+                and transparent ratings so what you see is what you experience.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="d-flex gap-3">
+            <div class="flex-shrink-0">
+              <div class="d-inline-flex p-3 rounded-3 bg-success bg-opacity-10 text-success fs-4">
+                <i class="bi bi-tag-fill"></i>
+              </div>
+            </div>
+            <div>
+              <h5 class="fw-bold mb-1">Honest Indian Pricing</h5>
+              <p class="text-muted small mb-0">No surprise resort fees at check-in. Total prices include transparent
+                night rates and standard GST calculations up-front.</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="d-flex gap-3">
+            <div class="flex-shrink-0">
+              <div class="d-inline-flex p-3 rounded-3 bg-primary bg-opacity-10 text-primary fs-4">
+                <i class="bi bi-arrow-repeat"></i>
+              </div>
+            </div>
+            <div>
+              <h5 class="fw-bold mb-1">Effortless Cancellation</h5>
+              <p class="text-muted small mb-0">Plans changed? Manage and cancel your reservations directly from your
+                personal booking dashboard with zero hassle.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Vanilla JS: Ensure check-in and check-out dates are logical
+  document.addEventListener('DOMContentLoaded', function () {
+    const checkInInput = document.getElementById('heroCheckIn');
+    const checkOutInput = document.getElementById('heroCheckOut');
+
+    if (checkInInput && checkOutInput) {
+      // Set min date to today
+      const today = new Date().toISOString().split('T')[0];
+      checkInInput.min = today;
+
+      // Default checkIn to today, checkOut to tomorrow
+      checkInInput.value = today;
+
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+      checkOutInput.min = tomorrowStr;
+      checkOutInput.value = tomorrowStr;
+
+      // Update checkOut min when checkIn changes
+      checkInInput.addEventListener('change', function () {
+        if (checkInInput.value) {
+          const nextDay = new Date(checkInInput.value);
+          nextDay.setDate(nextDay.getDate() + 1);
+          const nextDayStr = nextDay.toISOString().split('T')[0];
+          checkOutInput.min = nextDayStr;
+
+          if (checkOutInput.value <= checkInInput.value) {
+            checkOutInput.value = nextDayStr;
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

@@ -1,0 +1,137 @@
+{% extends 'base.html' %}
+
+{% block title %}Booking Confirmed - {{ booking['booking_id'] }} | StayNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <!-- Confirmation Success Banner -->
+      <div class="text-center mb-4">
+        <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-circle bg-success bg-opacity-10 text-success mb-3">
+          <i class="bi bi-check-circle-fill display-4"></i>
+        </div>
+        <h2 class="fw-bold mb-1">Reservation Confirmed!</h2>
+        <p class="text-muted fs-6">
+          Thank you, <strong>{{ booking['guest_name'] }}</strong>. Your stay is booked and guaranteed.
+        </p>
+        <span class="badge bg-light text-dark border px-3 py-2 fs-6 fw-semibold">
+          Booking ID: <span class="text-danger fw-bold">{{ booking['booking_id'] }}</span>
+        </span>
+      </div>
+
+      <!-- Printable Receipt Card -->
+      <div class="card border rounded-4 p-4 p-md-5 shadow-sm bg-white mb-4" id="printableReceipt">
+        
+        <!-- Header of Receipt -->
+        <div class="d-flex justify-content-between align-items-start border-bottom pb-4 mb-4">
+          <div>
+            <div class="d-flex align-items-center gap-2 mb-1">
+              <i class="bi bi-building-fill-check text-danger fs-3"></i>
+              <span class="fs-4 fw-bold text-dark">StayNest</span>
+            </div>
+            <p class="text-muted small mb-0">Official Booking Voucher & Reservation Receipt</p>
+          </div>
+          <div class="text-end">
+            <span class="badge badge-status-confirmed px-3 py-2 fs-6">
+              <i class="bi bi-check-circle-fill me-1"></i> {{ booking['status'] }}
+            </span>
+            <div class="text-muted small mt-1">Booked on {{ booking['created_at'][:10] }}</div>
+          </div>
+        </div>
+
+        <!-- Hotel Information -->
+        <div class="row g-4 mb-4">
+          <div class="col-md-7">
+            <h6 class="text-muted text-uppercase small fw-bold mb-2">Reserved Property</h6>
+            <h5 class="fw-bold text-dark mb-1">{{ booking['hotel_name'] }}</h5>
+            <p class="text-secondary small mb-2"><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ booking['address'] }}, {{ booking['city'] }}</p>
+            <div class="small text-muted">
+              Check-in Time: <strong>From 2:00 PM</strong> &bull; Check-out: <strong>By 11:00 AM</strong>
+            </div>
+          </div>
+          <div class="col-md-5 text-md-end">
+            <img src="{{ booking['image_main'] }}" alt="{{ booking['hotel_name'] }}" class="rounded-3 shadow-sm" style="width: 140px; height: 95px; object-fit: cover;" onerror="this.onerror=null;this.src='/static/images/hotel_placeholder.svg';">
+          </div>
+        </div>
+
+        <!-- Reservation Details Grid -->
+        <div class="p-4 bg-light rounded-3 border mb-4">
+          <div class="row g-3">
+            <div class="col-6 col-md-3">
+              <span class="text-muted small fw-bold d-block">CHECK-IN</span>
+              <strong class="text-dark">{{ booking['check_in'] }}</strong>
+            </div>
+            <div class="col-6 col-md-3">
+              <span class="text-muted small fw-bold d-block">CHECKOUT</span>
+              <strong class="text-dark">{{ booking['check_out'] }}</strong>
+            </div>
+            <div class="col-6 col-md-3">
+              <span class="text-muted small fw-bold d-block">GUESTS</span>
+              <strong class="text-dark">{{ booking['guests'] }} Adult{{ 's' if booking['guests'] != 1 else '' }}</strong>
+            </div>
+            <div class="col-6 col-md-3">
+              <span class="text-muted small fw-bold d-block">ROOM TYPE</span>
+              <strong class="text-dark">Deluxe Suite</strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- Guest Details -->
+        <div class="row g-3 pb-3 mb-4 border-bottom">
+          <div class="col-md-4">
+            <span class="text-muted small fw-bold d-block">LEAD GUEST</span>
+            <span class="text-dark fw-semibold">{{ booking['guest_name'] }}</span>
+          </div>
+          <div class="col-md-4">
+            <span class="text-muted small fw-bold d-block">EMAIL CONFIRMATION</span>
+            <span class="text-dark">{{ booking['guest_email'] }}</span>
+          </div>
+          <div class="col-md-4">
+            <span class="text-muted small fw-bold d-block">CONTACT PHONE</span>
+            <span class="text-dark">{{ booking['guest_phone'] }}</span>
+          </div>
+        </div>
+
+        <!-- Payment Total -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h6 class="fw-bold mb-0 text-dark">Total Amount (Taxes Included)</h6>
+            <span class="text-muted small">Standard 12% GST and hospitality fees included</span>
+          </div>
+          <div class="text-end">
+            <span class="display-6 fw-bold text-danger">₹{{ "{:,}".format(booking['total_price']) }}</span>
+            <div class="small text-success fw-semibold"><i class="bi bi-shield-check"></i> Pay at property on arrival</div>
+          </div>
+        </div>
+
+        <!-- Important Instructions -->
+        <div class="alert alert-light border small text-muted mb-0">
+          <strong>Important Instructions:</strong>
+          <ul class="mb-0 ps-3 mt-1">
+            <li>Please present a valid Government Photo ID (Aadhaar, Passport, or Driving License) during check-in.</li>
+            <li>Free cancellation is permitted up to 24 hours before your check-in date from your "My Bookings" page.</li>
+            <li>For any queries, present your Booking Reference ID <strong>{{ booking['booking_id'] }}</strong> at the front desk.</li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Actions Buttons (Print, My Bookings, Home) -->
+      <div class="d-flex flex-wrap gap-3 justify-content-center">
+        <button class="btn btn-outline-staynest px-4" onclick="window.print()">
+          <i class="bi bi-printer me-1"></i> Print / Save Receipt
+        </button>
+        <a href="{{ url_for('my_bookings') }}" class="btn btn-primary-staynest px-4">
+          <i class="bi bi-journal-bookmark me-1"></i> Go to My Bookings
+        </a>
+        <a href="{{ url_for('index') }}" class="btn btn-light border px-4">
+          Explore More Stays
+        </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

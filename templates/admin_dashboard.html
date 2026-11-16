@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+
+{% block title %}Admin Dashboard | StayNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- Header & Add CTA -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <div class="d-flex align-items-center gap-2 mb-1">
+        <span class="badge bg-danger px-2 py-1">Admin Portal</span>
+        <h2 class="fw-bold mb-0 text-dark">StayNest Operations Management</h2>
+      </div>
+      <p class="text-muted small mb-0">Manage listed properties, monitor platform bookings, and update hotel catalogs.</p>
+    </div>
+
+    <div>
+      <a href="{{ url_for('admin_add_hotel') }}" class="btn btn-primary-staynest shadow-sm">
+        <i class="bi bi-plus-circle me-1"></i> Add New Hotel
+      </a>
+    </div>
+  </div>
+
+  <!-- KPI Metric Summary Cards -->
+  <div class="row g-3 mb-5">
+    <div class="col-md-3 col-6">
+      <div class="card border rounded-4 p-3 bg-white shadow-sm h-100">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="text-muted small fw-semibold">Total Properties</span>
+          <div class="p-2 bg-danger bg-opacity-10 text-danger rounded-3 fs-5">
+            <i class="bi bi-building"></i>
+          </div>
+        </div>
+        <h3 class="fw-bold mb-0 text-dark">{{ hotel_count }}</h3>
+        <small class="text-muted">Across 7 Indian cities</small>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="card border rounded-4 p-3 bg-white shadow-sm h-100">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="text-muted small fw-semibold">Platform Bookings</span>
+          <div class="p-2 bg-primary bg-opacity-10 text-primary rounded-3 fs-5">
+            <i class="bi bi-calendar-check"></i>
+          </div>
+        </div>
+        <h3 class="fw-bold mb-0 text-dark">{{ booking_count }}</h3>
+        <small class="text-muted">Total reservations logged</small>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="card border rounded-4 p-3 bg-white shadow-sm h-100">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="text-muted small fw-semibold">Confirmed Volume</span>
+          <div class="p-2 bg-success bg-opacity-10 text-success rounded-3 fs-5">
+            <i class="bi bi-currency-rupee"></i>
+          </div>
+        </div>
+        <h3 class="fw-bold mb-0 text-dark">₹{{ "{:,}".format(total_revenue) }}</h3>
+        <small class="text-muted">Gross active value</small>
+      </div>
+    </div>
+
+    <div class="col-md-3 col-6">
+      <div class="card border rounded-4 p-3 bg-white shadow-sm h-100">
+        <div class="d-flex justify-content-between align-items-center mb-2">
+          <span class="text-muted small fw-semibold">Registered Accounts</span>
+          <div class="p-2 bg-warning bg-opacity-10 text-warning rounded-3 fs-5">
+            <i class="bi bi-people"></i>
+          </div>
+        </div>
+        <h3 class="fw-bold mb-0 text-dark">{{ user_count }}</h3>
+        <small class="text-muted">Guests & Admin users</small>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav Tabs for Hotels vs Bookings -->
+  <ul class="nav nav-pills mb-4 border-bottom pb-3" id="adminTabs" role="tablist">
+    <li class="nav-item" role="presentation">
+      <button class="nav-link active fw-semibold" id="hotels-tab" data-bs-toggle="pill" data-bs-target="#hotels-pane" type="button" role="tab">
+        <i class="bi bi-buildings me-1"></i> Hotels Catalog ({{ hotel_count }})
+      </button>
+    </li>
+    <li class="nav-item" role="presentation">
+      <button class="nav-link fw-semibold" id="bookings-tab" data-bs-toggle="pill" data-bs-target="#bookings-pane" type="button" role="tab">
+        <i class="bi bi-receipt me-1"></i> All Platform Bookings ({{ booking_count }})
+      </button>
+    </li>
+  </ul>
+
+  <!-- Tab Contents -->
+  <div class="tab-content" id="adminTabsContent">
+
+    <!-- ================= Pane 1: Hotels Catalog ================= -->
+    <div class="tab-pane fade show active" id="hotels-pane" role="tabpanel" tabindex="0">
+      <div class="card border rounded-4 shadow-sm bg-white overflow-hidden">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light small text-uppercase text-secondary">
+              <tr>
+                <th scope="col" style="width: 70px;">Stay</th>
+                <th scope="col">Hotel Name & Location</th>
+                <th scope="col">City</th>
+                <th scope="col">Price / Night</th>
+                <th scope="col">Rating</th>
+                <th scope="col" class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for h in hotels %}
+              <tr>
+                <td>
+                  <img src="{{ h['image_main'] }}" alt="{{ h['name'] }}" class="rounded-2" style="width: 60px; height: 45px; object-fit: cover;" onerror="this.onerror=null;this.src='/static/images/hotel_placeholder.svg';">
+                </td>
+                <td>
+                  <div class="fw-bold text-dark">{{ h['name'] }}</div>
+                  <small class="text-muted text-truncate d-block" style="max-width: 320px;">{{ h['address'] }}</small>
+                </td>
+                <td>
+                  <span class="badge bg-light text-dark border">{{ h['city'] }}</span>
+                </td>
+                <td>
+                  <strong class="text-dark">₹{{ "{:,}".format(h['price_per_night']) }}</strong>
+                </td>
+                <td>
+                  <span class="badge bg-warning text-dark">
+                    <i class="bi bi-star-fill"></i> {{ "%.1f"|format(h['rating']) }}
+                  </span>
+                  <small class="text-muted">({{ h['review_count'] }})</small>
+                </td>
+                <td class="text-end">
+                  <div class="btn-group btn-group-sm">
+                    <a href="{{ url_for('hotel_detail', hotel_id=h['id']) }}" class="btn btn-outline-secondary" title="View Public Page" target="_blank">
+                      <i class="bi bi-eye"></i>
+                    </a>
+                    <a href="{{ url_for('admin_edit_hotel', hotel_id=h['id']) }}" class="btn btn-outline-primary" title="Edit Hotel">
+                      <i class="bi bi-pencil"></i>
+                    </a>
+                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteHotelModal_{{ h['id'] }}" title="Delete Hotel">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+
+                  <!-- Delete Hotel Confirmation Modal -->
+                  <div class="modal fade" id="deleteHotelModal_{{ h['id'] }}" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                      <div class="modal-content rounded-4 border-0 shadow text-start">
+                        <div class="modal-header border-bottom-0">
+                          <h5 class="modal-title fw-bold text-dark">Delete Hotel Record?</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body py-2">
+                          <p class="text-muted mb-2">
+                            Are you sure you want to permanently delete <strong>{{ h['name'] }}</strong>?
+                          </p>
+                          <div class="alert alert-danger small mb-0">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i>
+                            Warning: This will delete the hotel and its associated reviews & booking references.
+                          </div>
+                        </div>
+                        <div class="modal-footer border-top-0">
+                          <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Cancel</button>
+                          <form action="{{ url_for('admin_delete_hotel', hotel_id=h['id']) }}" method="POST">
+                            <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                          </form>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= Pane 2: All Bookings ================= -->
+    <div class="tab-pane fade" id="bookings-pane" role="tabpanel" tabindex="0">
+      <div class="card border rounded-4 shadow-sm bg-white overflow-hidden">
+        {% if bookings %}
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light small text-uppercase text-secondary">
+                <tr>
+                  <th scope="col">Booking ID</th>
+                  <th scope="col">Guest Details</th>
+                  <th scope="col">Hotel Reserved</th>
+                  <th scope="col">Stay Dates</th>
+                  <th scope="col">Total Price</th>
+                  <th scope="col">Status</th>
+                  <th scope="col" class="text-end">Voucher</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for b in bookings %}
+                <tr>
+                  <td>
+                    <span class="badge bg-light text-dark border fw-bold">{{ b['booking_id'] }}</span>
+                  </td>
+                  <td>
+                    <div class="fw-bold text-dark">{{ b['guest_name'] }}</div>
+                    <small class="text-muted">{{ b['guest_email'] }} &bull; {{ b['guest_phone'] }}</small>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-dark">{{ b['hotel_name'] }}</div>
+                    <small class="text-muted">{{ b['city'] }}</small>
+                  </td>
+                  <td>
+                    <div class="small fw-semibold text-dark">{{ b['check_in'] }} &rarr; {{ b['check_out'] }}</div>
+                    <small class="text-muted">{{ b['guests'] }} Guests</small>
+                  </td>
+                  <td>
+                    <strong class="text-dark">₹{{ "{:,}".format(b['total_price']) }}</strong>
+                  </td>
+                  <td>
+                    {% if b['status'] == 'Confirmed' %}
+                      <span class="badge badge-status-confirmed"><i class="bi bi-check-circle-fill me-1"></i>Confirmed</span>
+                    {% else %}
+                      <span class="badge badge-status-cancelled"><i class="bi bi-x-circle-fill me-1"></i>Cancelled</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    <a href="{{ url_for('booking_confirmation', booking_id=b['booking_id']) }}" class="btn btn-sm btn-outline-secondary" target="_blank">
+                      <i class="bi bi-file-earmark-text me-1"></i> Voucher
+                    </a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        {% else %}
+          <div class="p-5 text-center text-muted">
+            <i class="bi bi-inbox fs-2 d-block mb-2 text-secondary"></i>
+            No bookings recorded in the system yet.
+          </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+</div>
+{% endblock %}

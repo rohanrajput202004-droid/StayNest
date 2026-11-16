@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign Up | StayNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+      
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <!-- Brand Header -->
+        <div class="text-center mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-circle bg-danger bg-opacity-10 text-danger mb-2">
+            <i class="bi bi-building-fill-check fs-2"></i>
+          </div>
+          <h3 class="fw-bold mb-1">Create your StayNest Account</h3>
+          <p class="text-muted small">Join thousands of travelers booking verified stays across India.</p>
+        </div>
+
+        <form action="{{ url_for('signup', next=request.args.get('next', '')) }}" method="POST">
+          <!-- Full Name -->
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-dark" for="signupName">
+              Full Name <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-person"></i></span>
+              <input type="text" name="name" id="signupName" class="form-control border-start-0" placeholder="e.g. Rahul Sharma" value="{{ name or '' }}" required autofocus>
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-dark" for="signupEmail">
+              Email Address <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+              <input type="email" name="email" id="signupEmail" class="form-control border-start-0" placeholder="e.g. rahul@example.com" value="{{ email or '' }}" required>
+            </div>
+          </div>
+
+          <!-- Password -->
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-dark" for="signupPassword">
+              Password <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+              <input type="password" name="password" id="signupPassword" class="form-control border-start-0" placeholder="At least 6 characters" minlength="6" required>
+            </div>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="mb-4">
+            <label class="form-label small fw-bold text-dark" for="signupConfirmPassword">
+              Confirm Password <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-shield-lock"></i></span>
+              <input type="password" name="confirm_password" id="signupConfirmPassword" class="form-control border-start-0" placeholder="Repeat your password" minlength="6" required>
+            </div>
+          </div>
+
+          <!-- Terms agreement text -->
+          <p class="text-muted small mb-4">
+            By signing up, you agree to StayNest's <a href="#" class="text-danger text-decoration-none">Terms of Service</a> and <a href="#" class="text-danger text-decoration-none">Privacy Policy</a>.
+          </p>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn btn-primary-staynest w-100 py-2 fw-bold fs-6 mb-3">
+            Create Account
+          </button>
+
+          <!-- Switch to Login Link -->
+          <div class="text-center pt-2 border-top">
+            <span class="text-muted small">Already have an account?</span>
+            <a href="{{ url_for('login', next=request.args.get('next', '')) }}" class="text-danger fw-semibold small text-decoration-none ms-1">
+              Log in here
+            </a>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}

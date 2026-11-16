@@ -1,0 +1,434 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {% if city %}
+    Stays in {{ city }} | StayNest Search
+  {% else %}
+    Search All Stays | StayNest
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<!-- ================= Compact Sticky Top Search Bar ================= -->
+<div class="bg-white border-bottom py-3 shadow-sm">
+  <div class="container">
+    <form action="{{ url_for('search') }}" method="GET" id="topSearchForm">
+      <div class="row g-2 align-items-center">
+        <!-- City Input -->
+        <div class="col-lg-3 col-md-4">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0 text-danger"><i class="bi bi-geo-alt-fill"></i></span>
+            <select name="city" class="form-select border-start-0" id="searchCity">
+              <option value="">All Destinations</option>
+              {% for c in cities %}
+                <option value="{{ c['city'] }}" {% if city == c['city'] %}selected{% endif %}>
+                  {{ c['city'] }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+
+        <!-- Dates -->
+        <div class="col-lg-2 col-md-3 col-6">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-calendar-event"></i></span>
+            <input type="date" name="check_in" id="searchCheckIn" value="{{ check_in }}" class="form-control border-start-0" placeholder="Check-in">
+          </div>
+        </div>
+
+        <div class="col-lg-2 col-md-3 col-6">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-calendar-check"></i></span>
+            <input type="date" name="check_out" id="searchCheckOut" value="{{ check_out }}" class="form-control border-start-0" placeholder="Check-out">
+          </div>
+        </div>
+
+        <!-- Guests -->
+        <div class="col-lg-2 col-md-2">
+          <div class="input-group">
+            <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-people"></i></span>
+            <select name="guests" class="form-select border-start-0">
+              <option value="1" {% if guests == '1' %}selected{% endif %}>1 Guest</option>
+              <option value="2" {% if guests == '2' or not guests %}selected{% endif %}>2 Guests</option>
+              <option value="3" {% if guests == '3' %}selected{% endif %}>3 Guests</option>
+              <option value="4" {% if guests == '4' %}selected{% endif %}>4+ Guests</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Search Button -->
+        <div class="col-lg-3 col-md-12 d-flex gap-2">
+          <button type="submit" class="btn btn-primary-staynest flex-grow-1">
+            <i class="bi bi-search me-1"></i> Update Search
+          </button>
+          <a href="{{ url_for('search') }}" class="btn btn-outline-staynest" title="Clear All Search Criteria">
+            <i class="bi bi-arrow-counterclockwise"></i>
+          </a>
+        </div>
+      </div>
+
+      <!-- Hidden inputs to preserve filters when submitting top bar -->
+      {% if min_price %}<input type="hidden" name="min_price" value="{{ min_price }}">{% endif %}
+      {% if max_price %}<input type="hidden" name="max_price" value="{{ max_price }}">{% endif %}
+      {% if min_rating %}<input type="hidden" name="min_rating" value="{{ min_rating }}">{% endif %}
+      {% for a in selected_amenities %}
+        <input type="hidden" name="amenity" value="{{ a }}">
+      {% endfor %}
+      {% if sort %}<input type="hidden" name="sort" value="{{ sort }}">{% endif %}
+    </form>
+  </div>
+</div>
+
+<!-- ================= Main Search Results & Filters Section ================= -->
+<div class="container py-4">
+  <div class="row g-4">
+
+    <!-- ================= Left Column: Filters Sidebar ================= -->
+    <div class="col-lg-3 col-md-4">
+      <div class="filter-box shadow-sm mb-4">
+        <form action="{{ url_for('search') }}" method="GET" id="filterSidebarForm">
+          <!-- Carry forward search inputs -->
+          <input type="hidden" name="city" value="{{ city }}">
+          <input type="hidden" name="check_in" value="{{ check_in }}">
+          <input type="hidden" name="check_out" value="{{ check_out }}">
+          <input type="hidden" name="guests" value="{{ guests }}">
+          <input type="hidden" name="sort" id="hiddenSort" value="{{ sort }}">
+
+          <div class="d-flex justify-content-between align-items-center pb-2 mb-3 border-bottom">
+            <h6 class="fw-bold mb-0 text-dark">
+              <i class="bi bi-sliders text-danger me-1"></i> Filter Stays
+            </h6>
+            <a href="{{ url_for('search', city=city, check_in=check_in, check_out=check_out, guests=guests) }}" class="small text-danger text-decoration-none fw-semibold">
+              Reset
+            </a>
+          </div>
+
+          <!-- Price Range Filter -->
+          <div class="mb-4">
+            <div class="filter-title">Price Per Night (₹)</div>
+            <div class="row g-2 mb-2">
+              <div class="col-6">
+                <label class="small text-muted mb-1">Min Price</label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-light">₹</span>
+                  <input type="number" name="min_price" class="form-control" placeholder="0" value="{{ min_price }}" min="0" step="500">
+                </div>
+              </div>
+              <div class="col-6">
+                <label class="small text-muted mb-1">Max Price</label>
+                <div class="input-group input-group-sm">
+                  <span class="input-group-text bg-light">₹</span>
+                  <input type="number" name="max_price" class="form-control" placeholder="10000" value="{{ max_price }}" min="0" step="500">
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Budget Presets -->
+            <div class="d-flex flex-wrap gap-1 mt-2">
+              <button type="button" class="btn btn-sm btn-light border py-0 px-2 text-muted small" onclick="setPrice(0, 3500)">Under ₹3.5k</button>
+              <button type="button" class="btn btn-sm btn-light border py-0 px-2 text-muted small" onclick="setPrice(3500, 6000)">₹3.5k - ₹6k</button>
+              <button type="button" class="btn btn-sm btn-light border py-0 px-2 text-muted small" onclick="setPrice(6000, 10000)">₹6k+</button>
+            </div>
+          </div>
+
+          <hr class="border-secondary opacity-25">
+
+          <!-- Rating Filter -->
+          <div class="mb-4">
+            <div class="filter-title">Guest Rating</div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="min_rating" id="ratingAny" value="" {% if not min_rating %}checked{% endif %}>
+              <label class="form-check-label small" for="ratingAny">
+                Any Rating
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="min_rating" id="rating45" value="4.5" {% if min_rating == '4.5' %}checked{% endif %}>
+              <label class="form-check-label small d-flex align-items-center gap-1" for="rating45">
+                <span class="badge bg-warning text-dark"><i class="bi bi-star-fill"></i> 4.5+</span>
+                <span>Exceptional</span>
+              </label>
+            </div>
+            <div class="form-check mb-2">
+              <input class="form-check-input" type="radio" name="min_rating" id="rating40" value="4.0" {% if min_rating == '4.0' %}checked{% endif %}>
+              <label class="form-check-label small d-flex align-items-center gap-1" for="rating40">
+                <span class="badge bg-light text-dark border"><i class="bi bi-star-fill text-warning"></i> 4.0+</span>
+                <span>Very Good</span>
+              </label>
+            </div>
+          </div>
+
+          <hr class="border-secondary opacity-25">
+
+          <!-- Amenities Filter -->
+          <div class="mb-4">
+            <div class="filter-title">Popular Amenities</div>
+            <div class="d-flex flex-column gap-2">
+              {% for amenity in available_amenities %}
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" name="amenity" value="{{ amenity }}" id="amenity_{{ loop.index }}"
+                         {% if amenity in selected_amenities %}checked{% endif %}>
+                  <label class="form-check-label small" for="amenity_{{ loop.index }}">
+                    {% if amenity == 'WiFi' %}
+                      <i class="bi bi-wifi text-secondary me-1"></i>
+                    {% elif amenity == 'Pool' %}
+                      <i class="bi bi-water text-primary me-1"></i>
+                    {% elif amenity == 'AC' %}
+                      <i class="bi bi-snow text-info me-1"></i>
+                    {% elif amenity == 'Free Breakfast' %}
+                      <i class="bi bi-cup-hot text-warning me-1"></i>
+                    {% elif 'Mountain' in amenity or 'Lake' in amenity or 'Beach' in amenity %}
+                      <i class="bi bi-image text-success me-1"></i>
+                    {% elif amenity == 'Spa' %}
+                      <i class="bi bi-flower1 text-danger me-1"></i>
+                    {% elif amenity == 'Parking' %}
+                      <i class="bi bi-p-circle text-muted me-1"></i>
+                    {% else %}
+                      <i class="bi bi-check2 text-secondary me-1"></i>
+                    {% endif %}
+                    {{ amenity }}
+                  </label>
+                </div>
+              {% endfor %}
+            </div>
+          </div>
+
+          <!-- Apply Filter Button -->
+          <button type="submit" class="btn btn-primary-staynest w-100">
+            Apply Filters
+          </button>
+        </form>
+      </div>
+    </div>
+
+    <!-- ================= Right Column: Results & Sorting ================= -->
+    <div class="col-lg-9 col-md-8">
+
+      <!-- Result Header & Sort Bar -->
+      <div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center pb-3 mb-3 border-bottom gap-2">
+        <div>
+          <h4 class="fw-bold mb-1">
+            {% if city %}
+              Stays in {{ city }}
+            {% else %}
+              All Destinations
+            {% endif %}
+          </h4>
+          <span class="text-muted small">
+            <strong>{{ hotels|length }}</strong> stay{{ 's' if hotels|length != 1 else '' }} available
+            {% if check_in and check_out %}
+              &bull; {{ check_in }} to {{ check_out }} ({{ guests }} Guest{{ 's' if guests != '1' else '' }})
+            {% endif %}
+          </span>
+        </div>
+
+        <!-- Sorting Dropdown -->
+        <div class="d-flex align-items-center gap-2">
+          <label class="small text-muted text-nowrap" for="sortSelect">Sort by:</label>
+          <select class="form-select form-select-sm" id="sortSelect" style="width: auto; min-width: 170px;" onchange="applySorting(this.value)">
+            <option value="recommended" {% if sort == 'recommended' %}selected{% endif %}>Recommended</option>
+            <option value="price_low" {% if sort == 'price_low' %}selected{% endif %}>Price: Low to High</option>
+            <option value="price_high" {% if sort == 'price_high' %}selected{% endif %}>Price: High to Low</option>
+            <option value="rating_high" {% if sort == 'rating_high' %}selected{% endif %}>Guest Rating: High to Low</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Active Filter Tags (if any active) -->
+      {% if min_price or max_price or min_rating or selected_amenities %}
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+          <span class="small text-muted fw-semibold">Active filters:</span>
+          {% if min_price or max_price %}
+            <span class="badge bg-light text-dark border px-2 py-1">
+              ₹{{ min_price or 0 }} - ₹{{ max_price or 'Any' }}
+            </span>
+          {% endif %}
+          {% if min_rating %}
+            <span class="badge bg-light text-dark border px-2 py-1">
+              ★ {{ min_rating }}+ Rating
+            </span>
+          {% endif %}
+          {% for am in selected_amenities %}
+            <span class="badge bg-light text-dark border px-2 py-1">
+              {{ am }}
+            </span>
+          {% endfor %}
+          <a href="{{ url_for('search', city=city, check_in=check_in, check_out=check_out, guests=guests) }}" class="text-danger small ms-1 text-decoration-none">
+            Clear filters
+          </a>
+        </div>
+      {% endif %}
+
+      <!-- Hotels List / Grid -->
+      {% if hotels %}
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+          {% for hotel in hotels %}
+          <div class="col">
+            <div class="hotel-card">
+              <!-- Image Wrapper -->
+              <div class="hotel-card-img-wrap">
+                <a href="{{ url_for('hotel_detail', hotel_id=hotel['id'], check_in=check_in, check_out=check_out, guests=guests) }}">
+                  <img src="{{ hotel['image_main'] }}" 
+                       alt="{{ hotel['name'] }}" 
+                       class="hotel-card-img" 
+                       loading="lazy"
+                       onerror="this.onerror=null;this.src='/static/images/hotel_placeholder.svg';">
+                </a>
+                <span class="hotel-city-badge">
+                  <i class="bi bi-geo-alt-fill me-1"></i>{{ hotel['city'] }}
+                </span>
+              </div>
+
+              <!-- Card Body -->
+              <div class="hotel-card-body">
+                <!-- Title & Rating -->
+                <div class="d-flex justify-content-between align-items-start mb-1">
+                  <h5 class="fw-bold mb-0 text-truncate" style="max-width: 72%;">
+                    <a href="{{ url_for('hotel_detail', hotel_id=hotel['id'], check_in=check_in, check_out=check_out, guests=guests) }}" class="text-dark text-decoration-none">
+                      {{ hotel['name'] }}
+                    </a>
+                  </h5>
+                  <div class="hotel-rating-badge">
+                    <i class="bi bi-star-fill rating-star"></i>
+                    <span>{{ "%.1f"|format(hotel['rating']) }}</span>
+                    <span class="text-muted fw-normal small">({{ hotel['review_count'] }})</span>
+                  </div>
+                </div>
+
+                <!-- Address -->
+                <p class="text-muted small mb-2 text-truncate">
+                  <i class="bi bi-signpost-2 me-1"></i>{{ hotel['address'] }}
+                </p>
+
+                <!-- Amenities Tags -->
+                <div class="d-flex flex-wrap gap-1 mb-3">
+                  {% for amenity in hotel['amenities'].split(',')[:3] %}
+                    <span class="amenity-tag">
+                      {% if 'WiFi' in amenity %}
+                        <i class="bi bi-wifi text-secondary"></i>
+                      {% elif 'Pool' in amenity %}
+                        <i class="bi bi-water text-primary"></i>
+                      {% elif 'AC' in amenity %}
+                        <i class="bi bi-snow text-info"></i>
+                      {% elif 'Breakfast' in amenity %}
+                        <i class="bi bi-cup-hot text-warning"></i>
+                      {% elif 'Mountain' in amenity or 'View' in amenity %}
+                        <i class="bi bi-image text-success"></i>
+                      {% elif 'Beach' in amenity %}
+                        <i class="bi bi-umbrella text-warning"></i>
+                      {% elif 'Spa' in amenity %}
+                        <i class="bi bi-flower1 text-danger"></i>
+                      {% else %}
+                        <i class="bi bi-check2-circle text-muted"></i>
+                      {% endif %}
+                      {{ amenity.strip() }}
+                    </span>
+                  {% endfor %}
+                  {% if hotel['amenities'].split(',')|length > 3 %}
+                    <span class="amenity-tag text-muted">
+                      +{{ hotel['amenities'].split(',')|length - 3 }}
+                    </span>
+                  {% endif %}
+                </div>
+
+                <!-- Price and Action -->
+                <div class="mt-auto d-flex justify-content-between align-items-center pt-3 border-top">
+                  <div>
+                    <span class="hotel-price-text">₹{{ "{:,}".format(hotel['price_per_night']) }}</span>
+                    <span class="hotel-price-period">/ night</span>
+                  </div>
+                  <a href="{{ url_for('hotel_detail', hotel_id=hotel['id'], check_in=check_in, check_out=check_out, guests=guests) }}" class="btn btn-sm btn-outline-staynest fw-semibold">
+                    View Stay <i class="bi bi-arrow-right ms-1"></i>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <!-- Proper Empty State -->
+        <div class="empty-state">
+          <div class="empty-state-icon">
+            <i class="bi bi-search-heart"></i>
+          </div>
+          <h4 class="fw-bold mb-2">No Stays Match Your Exact Filters</h4>
+          <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">
+            We couldn't find any stays matching your selected price range, amenities, or rating. Try broadening your criteria or resetting filters.
+          </p>
+          <div class="d-flex justify-content-center gap-2">
+            <a href="{{ url_for('search', city=city) }}" class="btn btn-primary-staynest">
+              Reset Filters for {{ city or 'All Cities' }}
+            </a>
+            <a href="{{ url_for('search') }}" class="btn btn-outline-staynest">
+              Browse All Stays
+            </a>
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Quick budget helper function
+  function setPrice(min, max) {
+    const minInput = document.querySelector('input[name="min_price"]');
+    const maxInput = document.querySelector('input[name="max_price"]');
+    if (minInput && maxInput) {
+      minInput.value = min;
+      maxInput.value = max;
+    }
+  }
+
+  // Trigger sorting change
+  function applySorting(sortVal) {
+    const hiddenSort = document.getElementById('hiddenSort');
+    if (hiddenSort) {
+      hiddenSort.value = sortVal;
+      document.getElementById('filterSidebarForm').submit();
+    }
+  }
+
+  // Set min dates for top search bar
+  document.addEventListener('DOMContentLoaded', function() {
+    const checkInInput = document.getElementById('searchCheckIn');
+    const checkOutInput = document.getElementById('searchCheckOut');
+
+    if (checkInInput && checkOutInput) {
+      const today = new Date().toISOString().split('T')[0];
+      checkInInput.min = today;
+
+      if (!checkInInput.value) {
+        checkInInput.value = today;
+      }
+
+      const nextDay = new Date(checkInInput.value || today);
+      nextDay.setDate(nextDay.getDate() + 1);
+      const nextDayStr = nextDay.toISOString().split('T')[0];
+      checkOutInput.min = nextDayStr;
+
+      if (!checkOutInput.value) {
+        checkOutInput.value = nextDayStr;
+      }
+
+      checkInInput.addEventListener('change', function() {
+        if (checkInInput.value) {
+          const updateNext = new Date(checkInInput.value);
+          updateNext.setDate(updateNext.getDate() + 1);
+          const updateNextStr = updateNext.toISOString().split('T')[0];
+          checkOutInput.min = updateNextStr;
+
+          if (checkOutInput.value <= checkInInput.value) {
+            checkOutInput.value = updateNextStr;
+          }
+        }
+      });
+    }
+  });
+</script>
+{% endblock %}

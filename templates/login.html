@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Log In | StayNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-7 col-lg-5">
+      
+      <div class="card border-0 shadow-sm rounded-4 p-4 p-md-5 bg-white">
+        <!-- Brand Header -->
+        <div class="text-center mb-4">
+          <div class="d-inline-flex align-items-center justify-content-center p-3 rounded-circle bg-danger bg-opacity-10 text-danger mb-2">
+            <i class="bi bi-box-arrow-in-right fs-2"></i>
+          </div>
+          <h3 class="fw-bold mb-1">Welcome back</h3>
+          <p class="text-muted small">Log in to manage your bookings and access exclusive stays.</p>
+        </div>
+
+        <!-- Quick Demo Credentials Box -->
+        <div class="p-3 bg-light rounded-3 border mb-4">
+          <div class="d-flex justify-content-between align-items-center mb-2">
+            <span class="small fw-bold text-dark"><i class="bi bi-key-fill text-warning me-1"></i>Quick Test Accounts:</span>
+            <span class="badge bg-white text-secondary border small">1-Click Fill</span>
+          </div>
+          <div class="d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary w-50 py-1 small" onclick="fillCredentials('admin@staynest.com', 'admin123')">
+              <i class="bi bi-shield-lock text-danger me-1"></i> Admin
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-secondary w-50 py-1 small" onclick="fillCredentials('rohan@example.com', 'user123')">
+              <i class="bi bi-person text-primary me-1"></i> Guest User
+            </button>
+          </div>
+        </div>
+
+        <form action="{{ url_for('login', next=request.args.get('next', '')) }}" method="POST">
+          <!-- Email Input -->
+          <div class="mb-3">
+            <label class="form-label small fw-bold text-dark" for="loginEmail">
+              Email Address <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+              <input type="email" name="email" id="loginEmail" class="form-control border-start-0" placeholder="e.g. rohan@example.com" value="{{ email or '' }}" required autofocus>
+            </div>
+          </div>
+
+          <!-- Password Input -->
+          <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-1">
+              <label class="form-label small fw-bold text-dark mb-0" for="loginPassword">
+                Password <span class="text-danger">*</span>
+              </label>
+            </div>
+            <div class="input-group">
+              <span class="input-group-text bg-light border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+              <input type="password" name="password" id="loginPassword" class="form-control border-start-0" placeholder="Enter your password" required>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" class="btn btn-primary-staynest w-100 py-2 fw-bold fs-6 mb-3">
+            Sign In
+          </button>
+
+          <!-- Switch to Signup Link -->
+          <div class="text-center pt-2 border-top">
+            <span class="text-muted small">New to StayNest?</span>
+            <a href="{{ url_for('signup', next=request.args.get('next', '')) }}" class="text-danger fw-semibold small text-decoration-none ms-1">
+              Create an account
+            </a>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Helper for 1-click test credentials filling
+  function fillCredentials(email, password) {
+    const emailField = document.getElementById('loginEmail');
+    const passField = document.getElementById('loginPassword');
+    if (emailField && passField) {
+      emailField.value = email;
+      passField.value = password;
+    }
+  }
+</script>
+{% endblock %}

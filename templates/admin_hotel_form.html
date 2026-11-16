@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}
+  {% if mode == 'edit' %}
+    Edit Stay: {{ hotel['name'] }} | StayNest Admin
+  {% else %}
+    Add New Stay Property | StayNest Admin
+  {% endif %}
+{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+
+      <!-- Breadcrumbs -->
+      <nav aria-label="breadcrumb" class="mb-3">
+        <ol class="breadcrumb small">
+          <li class="breadcrumb-item"><a href="{{ url_for('admin_dashboard') }}" class="text-decoration-none text-muted">Admin Dashboard</a></li>
+          <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">
+            {{ 'Edit Property' if mode == 'edit' else 'Add New Property' }}
+          </li>
+        </ol>
+      </nav>
+
+      <div class="card border rounded-4 p-4 p-md-5 shadow-sm bg-white">
+        
+        <!-- Form Header -->
+        <div class="d-flex align-items-center gap-3 mb-4 pb-3 border-bottom">
+          <div class="p-3 bg-danger bg-opacity-10 text-danger rounded-3 fs-3">
+            <i class="bi {{ 'bi-pencil-square' if mode == 'edit' else 'bi-building-add' }}"></i>
+          </div>
+          <div>
+            <h3 class="fw-bold mb-1 text-dark">
+              {{ 'Edit Stay Property' if mode == 'edit' else 'List a New Property on StayNest' }}
+            </h3>
+            <p class="text-muted small mb-0">Fill in the property details, pricing, and high-resolution Unsplash photo URL.</p>
+          </div>
+        </div>
+
+        <!-- Property Form -->
+        <form action="{{ url_for('admin_edit_hotel', hotel_id=hotel_id) if mode == 'edit' else url_for('admin_add_hotel') }}" method="POST">
+          
+          <div class="row g-3">
+            <!-- Hotel Name -->
+            <div class="col-md-8">
+              <label class="form-label small fw-bold text-dark" for="hotelName">
+                Property / Hotel Name <span class="text-danger">*</span>
+              </label>
+              <input type="text" name="name" id="hotelName" class="form-control" required placeholder="e.g. Taj View Heritage Resort" value="{{ hotel['name'] or '' }}">
+            </div>
+
+            <!-- City -->
+            <div class="col-md-4">
+              <label class="form-label small fw-bold text-dark" for="hotelCity">
+                City / Destination <span class="text-danger">*</span>
+              </label>
+              <input type="text" name="city" id="hotelCity" list="cityList" class="form-control" required placeholder="e.g. Jaipur" value="{{ hotel['city'] or '' }}">
+              <datalist id="cityList">
+                <option value="Goa">
+                <option value="Jaipur">
+                <option value="Manali">
+                <option value="Mumbai">
+                <option value="Udaipur">
+                <option value="Delhi">
+                <option value="Kerala">
+              </datalist>
+            </div>
+
+            <!-- Address -->
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="hotelAddress">
+                Full Street Address & Landmark <span class="text-danger">*</span>
+              </label>
+              <input type="text" name="address" id="hotelAddress" class="form-control" required placeholder="e.g. Near Hawa Mahal, Badi Chaupar, Jaipur" value="{{ hotel['address'] or '' }}">
+            </div>
+
+            <!-- Price Per Night -->
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-dark" for="hotelPrice">
+                Price Per Night (₹ INR) <span class="text-danger">*</span>
+              </label>
+              <div class="input-group">
+                <span class="input-group-text bg-light">₹</span>
+                <input type="number" name="price_per_night" id="hotelPrice" class="form-control" required placeholder="e.g. 4500" min="500" step="100" value="{{ hotel['price_per_night'] or '' }}">
+              </div>
+            </div>
+
+            <!-- Amenities -->
+            <div class="col-md-6">
+              <label class="form-label small fw-bold text-dark" for="hotelAmenities">
+                Amenities (Comma separated) <span class="text-danger">*</span>
+              </label>
+              <input type="text" name="amenities" id="hotelAmenities" class="form-control" required placeholder="WiFi, Pool, AC, Free Breakfast, Parking" value="{{ hotel['amenities'] or '' }}">
+              <small class="text-muted">Separate features by comma.</small>
+            </div>
+
+            <!-- Main Image URL -->
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="hotelImage">
+                Main Image URL (Unsplash or direct image link) <span class="text-danger">*</span>
+              </label>
+              <input type="url" name="image_main" id="hotelImage" class="form-control" required placeholder="https://images.unsplash.com/photo-..." value="{{ hotel['image_main'] or '' }}" oninput="previewImage(this.value)">
+              <small class="text-muted">Use high quality 800px+ landscape orientation photo.</small>
+            </div>
+
+            <!-- Image Preview Box -->
+            <div class="col-12" id="previewContainer" style="display: {{ 'block' if hotel['image_main'] else 'none' }};">
+              <label class="form-label small text-muted">Image Live Preview:</label>
+              <div class="rounded-3 overflow-hidden border" style="max-width: 320px; height: 180px;">
+                <img id="imagePreview" src="{{ hotel['image_main'] or '' }}" alt="Preview" class="w-100 h-100" style="object-fit: cover;" onerror="this.src='/static/images/hotel_placeholder.svg';">
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div class="col-12">
+              <label class="form-label small fw-bold text-dark" for="hotelDesc">
+                Natural Property Description <span class="text-danger">*</span>
+              </label>
+              <textarea name="description" id="hotelDesc" class="form-control" rows="4" required placeholder="Write a natural, compelling description of the stay, ambiance, nearby attractions, views, and culinary highlights...">{{ hotel['description'] or '' }}</textarea>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="d-flex justify-content-between align-items-center mt-4 pt-3 border-top">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary px-4">
+              Cancel
+            </a>
+            <button type="submit" class="btn btn-primary-staynest px-4 py-2 fw-semibold">
+              <i class="bi bi-check2-circle me-1"></i>
+              {{ 'Save Changes' if mode == 'edit' else 'Publish Hotel' }}
+            </button>
+          </div>
+
+        </form>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  function previewImage(url) {
+    const preview = document.getElementById('imagePreview');
+    const container = document.getElementById('previewContainer');
+    if (url && url.startsWith('http')) {
+      preview.src = url;
+      container.style.display = 'block';
+    } else {
+      container.style.display = 'none';
+    }
+  }
+</script>
+{% endblock %}

@@ -1,0 +1,463 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ hotel['name'] }} | StayNest {{ hotel['city'] }}{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+
+  <!-- ================= Breadcrumbs ================= -->
+  <nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb small">
+      <li class="breadcrumb-item"><a href="{{ url_for('index') }}" class="text-decoration-none text-muted">Home</a></li>
+      <li class="breadcrumb-item"><a href="{{ url_for('search', city=hotel['city']) }}" class="text-decoration-none text-muted">Stays in {{ hotel['city'] }}</a></li>
+      <li class="breadcrumb-item active text-dark fw-semibold" aria-current="page">{{ hotel['name'] }}</li>
+    </ol>
+  </nav>
+
+  <!-- ================= Header Title & Badges ================= -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-start mb-3 gap-2">
+    <div>
+      <h2 class="fw-bold mb-1 text-dark">{{ hotel['name'] }}</h2>
+      <div class="d-flex flex-wrap align-items-center gap-2 small text-muted">
+        <span class="hotel-rating-badge">
+          <i class="bi bi-star-fill rating-star"></i>
+          <span>{{ "%.1f"|format(hotel['rating']) }}</span>
+        </span>
+        <span class="fw-semibold text-dark">({{ hotel['review_count'] }} guest reviews)</span>
+        <span>&bull;</span>
+        <span><i class="bi bi-geo-alt-fill text-danger me-1"></i>{{ hotel['address'] }}</span>
+        <span>&bull;</span>
+        <span class="badge bg-success bg-opacity-10 text-success fw-semibold">
+          <i class="bi bi-patch-check-fill me-1"></i>StayNest Verified
+        </span>
+      </div>
+    </div>
+
+    <!-- Social / Wishlist visual actions -->
+    <div class="d-flex gap-2">
+      <button class="btn btn-sm btn-outline-staynest" onclick="navigator.clipboard.writeText(window.location.href); alert('Hotel link copied to clipboard!');">
+        <i class="bi bi-share me-1"></i> Share
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= Photo Gallery (Airbnb Grid Layout) ================= -->
+  <div class="gallery-container shadow-sm mb-4">
+    <div class="row g-2">
+      <!-- Main Primary Photo (Left) -->
+      <div class="col-md-7 col-lg-8">
+        <div class="gallery-main-img-wrap rounded-start">
+          <img src="{{ hotel['image_main'] }}" 
+               alt="{{ hotel['name'] }} main view" 
+               class="gallery-img"
+               onerror="this.onerror=null;this.src='/static/images/hotel_placeholder.svg';">
+        </div>
+      </div>
+
+      <!-- Extra Detail Photos (Right Stack) -->
+      <div class="col-md-5 col-lg-4 d-flex flex-column gap-2">
+        {% if extra_images|length >= 1 %}
+          <div class="gallery-sub-img-wrap rounded-end">
+            <img src="{{ extra_images[0] }}" 
+                 alt="{{ hotel['name'] }} suite interior" 
+                 class="gallery-img"
+                 onerror="this.onerror=null;this.src='/static/images/hotel_placeholder.svg';">
+          </div>
+        {% endif %}
+        {% if extra_images|length >= 2 %}
+          <div class="gallery-sub-img-wrap rounded-end">
+            <img src="{{ extra_images[1] }}" 
+                 alt="{{ hotel['name'] }} room detail" 
+                 class="gallery-img"
+                 onerror="this.onerror=null;this.src='/static/images/hotel_placeholder.svg';">
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- ================= 2-Column Content Section ================= -->
+  <div class="row g-5">
+
+    <!-- Left Column: Hotel Info, Description, Amenities, Reviews -->
+    <div class="col-lg-8">
+
+      <!-- Highlights Strip -->
+      <div class="d-flex flex-wrap gap-4 py-3 mb-4 border-bottom">
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-door-open fs-4 text-danger"></i>
+          <div>
+            <div class="fw-bold small">Self Check-in</div>
+            <div class="text-muted small">Check yourself in with front desk assistance</div>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-sparkles fs-4 text-warning"></i>
+          <div>
+            <div class="fw-bold small">Enhanced Cleanliness</div>
+            <div class="text-muted small">Sanitized daily according to StayNest hygiene standards</div>
+          </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+          <i class="bi bi-shield-check fs-4 text-success"></i>
+          <div>
+            <div class="fw-bold small">Free Cancellation</div>
+            <div class="text-muted small">Cancel anytime up to 24 hours before check-in</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Description Section -->
+      <div class="mb-5">
+        <h4 class="fw-bold mb-3 text-dark">About this Stay</h4>
+        <p class="text-secondary leading-relaxed" style="font-size: 1.05rem; line-height: 1.7;">
+          {{ hotel['description'] }}
+        </p>
+      </div>
+
+      <!-- Room & Bed Configuration -->
+      <div class="mb-5">
+        <h4 class="fw-bold mb-3 text-dark">Accommodations</h4>
+        <div class="row g-3">
+          <div class="col-md-6">
+            <div class="p-3 border rounded-3 bg-white shadow-sm">
+              <i class="bi bi-moon-stars fs-3 text-primary mb-2 d-block"></i>
+              <h6 class="fw-bold mb-1">Deluxe Suite Room</h6>
+              <p class="text-muted small mb-0">1 King Bed &bull; Attached luxury bath &bull; Balcony</p>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="p-3 border rounded-3 bg-white shadow-sm">
+              <i class="bi bi-people fs-3 text-success mb-2 d-block"></i>
+              <h6 class="fw-bold mb-1">Guest Capacity</h6>
+              <p class="text-muted small mb-0">Suitable for up to 4 adults &bull; Extra rollaway bed on request</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Amenities Section -->
+      <div class="mb-5">
+        <h4 class="fw-bold mb-3 text-dark">What this stay offers</h4>
+        <div class="row row-cols-1 row-cols-md-2 g-3">
+          {% for amenity in amenities_list %}
+          <div class="col">
+            <div class="amenity-grid-box shadow-sm">
+              <div class="amenity-grid-icon">
+                {% if 'WiFi' in amenity %}
+                  <i class="bi bi-wifi"></i>
+                {% elif 'Pool' in amenity %}
+                  <i class="bi bi-water"></i>
+                {% elif 'AC' in amenity %}
+                  <i class="bi bi-snow"></i>
+                {% elif 'Breakfast' in amenity %}
+                  <i class="bi bi-cup-hot"></i>
+                {% elif 'Mountain' in amenity or 'Lake' in amenity or 'View' in amenity %}
+                  <i class="bi bi-image"></i>
+                {% elif 'Beach' in amenity %}
+                  <i class="bi bi-umbrella"></i>
+                {% elif 'Spa' in amenity %}
+                  <i class="bi bi-flower1"></i>
+                {% elif 'Parking' in amenity %}
+                  <i class="bi bi-p-circle"></i>
+                {% elif 'Gym' in amenity %}
+                  <i class="bi bi-activity"></i>
+                {% elif 'Bar' in amenity %}
+                  <i class="bi bi-cup-straw"></i>
+                {% elif 'Restaurant' in amenity or 'Dining' in amenity %}
+                  <i class="bi bi-egg-fried"></i>
+                {% else %}
+                  <i class="bi bi-check-circle-fill"></i>
+                {% endif %}
+              </div>
+              <span class="fw-medium text-dark">{{ amenity }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+
+      <!-- House Rules & Policies -->
+      <div class="mb-5 p-4 bg-white border rounded-4 shadow-sm">
+        <h5 class="fw-bold mb-3">House Rules & Good to Know</h5>
+        <div class="row g-3 small text-muted">
+          <div class="col-md-6">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <i class="bi bi-clock text-danger"></i>
+              <span><strong>Check-in:</strong> 2:00 PM – 10:00 PM</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-clock-history text-danger"></i>
+              <span><strong>Check-out:</strong> 11:00 AM</span>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="d-flex align-items-center gap-2 mb-2">
+              <i class="bi bi-card-checklist text-success"></i>
+              <span>Valid Government Photo ID required at check-in</span>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+              <i class="bi bi-heart text-danger"></i>
+              <span>Couples and families are welcome</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= Guest Reviews Section ================= -->
+      <div class="mb-5">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div class="d-flex align-items-center gap-2">
+            <h4 class="fw-bold mb-0">Guest Reviews</h4>
+            <span class="badge bg-warning text-dark fs-6">
+              ★ {{ "%.1f"|format(hotel['rating']) }}
+            </span>
+            <span class="text-muted small">({{ reviews|length }} reviews)</span>
+          </div>
+          <button class="btn btn-sm btn-outline-staynest" type="button" data-bs-toggle="collapse" data-bs-target="#addReviewForm" aria-expanded="false">
+            <i class="bi bi-pencil-square me-1"></i> Write a Review
+          </button>
+        </div>
+
+        <!-- Collapsible Review Submission Form -->
+        <div class="collapse mb-4" id="addReviewForm">
+          <div class="card card-body border shadow-sm rounded-4 p-4">
+            <h6 class="fw-bold mb-3">Share your stay experience</h6>
+            <form action="{{ url_for('add_review', hotel_id=hotel['id']) }}" method="POST">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Your Full Name</label>
+                  <input type="text" name="user_name" class="form-control" required placeholder="e.g. Ankit Sharma" value="{{ session.get('user_name', '') }}">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label small fw-semibold">Your Rating</label>
+                  <select name="rating" class="form-select" required>
+                    <option value="5" selected>★★★★★ 5 - Exceptional Experience</option>
+                    <option value="4">★★★★☆ 4 - Very Good Stay</option>
+                    <option value="3">★★★☆☆ 3 - Average</option>
+                    <option value="2">★★☆☆☆ 2 - Below Expectations</option>
+                    <option value="1">★☆☆☆☆ 1 - Poor</option>
+                  </select>
+                </div>
+                <div class="col-12">
+                  <label class="form-label small fw-semibold">Your Honest Feedback</label>
+                  <textarea name="comment" class="form-control" rows="3" required placeholder="Tell other travelers about the room comfort, views, food, and hospitality..."></textarea>
+                </div>
+                <div class="col-12 text-end">
+                  <button type="submit" class="btn btn-primary-staynest">Submit Verified Review</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Reviews List -->
+        {% if reviews %}
+          <div class="d-flex flex-column gap-3">
+            {% for r in reviews %}
+            <div class="p-4 bg-white border rounded-3 shadow-sm">
+              <div class="d-flex justify-content-between align-items-center mb-2">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="review-avatar-circle">
+                    {{ r['user_name'][:2]|upper }}
+                  </div>
+                  <div>
+                    <h6 class="fw-bold mb-0 text-dark">{{ r['user_name'] }}</h6>
+                    <small class="text-muted">{{ r['created_at'][:10] if r['created_at'] else 'Verified Guest' }}</small>
+                  </div>
+                </div>
+                <div class="text-warning small">
+                  {% for star in range(r['rating']) %}
+                    <i class="bi bi-star-fill"></i>
+                  {% endfor %}
+                </div>
+              </div>
+              <p class="text-secondary small mb-0" style="line-height: 1.6;">
+                {{ r['comment'] }}
+              </p>
+            </div>
+            {% endfor %}
+          </div>
+        {% else %}
+          <div class="p-4 text-center bg-white border rounded-3 text-muted">
+            <i class="bi bi-chat-heart fs-3 text-secondary d-block mb-2"></i>
+            No reviews written yet. Be the first to share your experience!
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Related Stays in the Same City -->
+      {% if related_hotels %}
+        <div class="mt-5 pt-4 border-top">
+          <h4 class="fw-bold mb-3">Other Stays in {{ hotel['city'] }}</h4>
+          <div class="row row-cols-1 row-cols-md-3 g-3">
+            {% for rh in related_hotels %}
+            <div class="col">
+              <div class="card h-100 border shadow-sm rounded-3 overflow-hidden">
+                <img src="{{ rh['image_main'] }}" class="card-img-top" style="height: 130px; object-fit: cover;" alt="{{ rh['name'] }}" onerror="this.onerror=null;this.src='/static/images/hotel_placeholder.svg';">
+                <div class="card-body p-3 d-flex flex-column">
+                  <h6 class="fw-bold mb-1 text-truncate">{{ rh['name'] }}</h6>
+                  <div class="small text-muted mb-2">₹{{ "{:,}".format(rh['price_per_night']) }} / night</div>
+                  <a href="{{ url_for('hotel_detail', hotel_id=rh['id']) }}" class="btn btn-sm btn-outline-staynest mt-auto">View Stay</a>
+                </div>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+      {% endif %}
+
+    </div>
+
+    <!-- Right Column: Sticky Booking Card -->
+    <div class="col-lg-4">
+      <div class="booking-sticky-card">
+        <!-- Price Display -->
+        <div class="d-flex justify-content-between align-items-baseline mb-3">
+          <div>
+            <span class="fs-3 fw-bold text-dark">₹{{ "{:,}".format(hotel['price_per_night']) }}</span>
+            <span class="text-muted small">/ night</span>
+          </div>
+          <div class="small text-muted">
+            <i class="bi bi-star-fill text-warning"></i> <strong>{{ "%.1f"|format(hotel['rating']) }}</strong> ({{ hotel['review_count'] }})
+          </div>
+        </div>
+
+        <!-- Reservation Form (leads to checkout in Step 6) -->
+        <form action="{{ url_for('checkout', hotel_id=hotel['id']) }}" method="GET" id="bookingForm">
+          <input type="hidden" name="hotel_id" value="{{ hotel['id'] }}">
+
+          <!-- Dates Wrapper Box -->
+          <div class="border rounded-3 p-2 mb-3 bg-light">
+            <div class="row g-2">
+              <div class="col-6 border-end">
+                <label class="small text-muted fw-bold d-block" for="cardCheckIn">CHECK-IN</label>
+                <input type="date" name="check_in" id="cardCheckIn" class="form-control form-control-sm border-0 bg-transparent px-0 fw-semibold" value="{{ check_in }}" required>
+              </div>
+              <div class="col-6">
+                <label class="small text-muted fw-bold d-block" for="cardCheckOut">CHECKOUT</label>
+                <input type="date" name="check_out" id="cardCheckOut" class="form-control form-control-sm border-0 bg-transparent px-0 fw-semibold" value="{{ check_out }}" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Guests Selector -->
+          <div class="mb-3">
+            <label class="small text-muted fw-bold mb-1" for="cardGuests">GUESTS</label>
+            <select name="guests" id="cardGuests" class="form-select">
+              <option value="1" {% if guests == '1' %}selected{% endif %}>1 Guest</option>
+              <option value="2" {% if guests == '2' or not guests %}selected{% endif %}>2 Guests</option>
+              <option value="3" {% if guests == '3' %}selected{% endif %}>3 Guests</option>
+              <option value="4" {% if guests == '4' %}selected{% endif %}>4 Guests</option>
+            </select>
+          </div>
+
+          <!-- Price Calculation Breakdown (Dynamically updated by JS) -->
+          <div class="p-3 bg-light rounded-3 mb-3 border" id="priceCalculationBox">
+            <div class="price-breakdown-item">
+              <span id="baseCalculationText">₹{{ "{:,}".format(hotel['price_per_night']) }} &times; 1 night</span>
+              <span class="fw-semibold" id="baseTotalText">₹{{ "{:,}".format(hotel['price_per_night']) }}</span>
+            </div>
+            <div class="price-breakdown-item">
+              <span>GST & Hospitality Taxes (12%)</span>
+              <span class="fw-semibold" id="taxesText">₹{{ "{:,}".format((hotel['price_per_night'] * 0.12)|int) }}</span>
+            </div>
+            <div class="price-breakdown-item total">
+              <span>Total Amount</span>
+              <span class="text-danger" id="grandTotalText">₹{{ "{:,}".format((hotel['price_per_night'] * 1.12)|int) }}</span>
+            </div>
+          </div>
+
+          <!-- Reserve Button -->
+          <button type="submit" class="btn btn-primary-staynest w-100 py-3 fw-bold fs-6 mb-2">
+            Proceed to Reserve
+          </button>
+
+          <p class="text-center text-muted small mb-3">
+            You won't be charged yet &bull; Instant confirmation
+          </p>
+
+          <div class="d-flex align-items-center gap-2 p-2 bg-success bg-opacity-10 rounded-2 text-success small">
+            <i class="bi bi-shield-check fs-5"></i>
+            <div>Free cancellation up to 24 hours prior to check-in</div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+  // Price per night from backend
+  const pricePerNight = {{ hotel['price_per_night'] }};
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const checkInInput = document.getElementById('cardCheckIn');
+    const checkOutInput = document.getElementById('cardCheckOut');
+    const baseCalcSpan = document.getElementById('baseCalculationText');
+    const baseTotalSpan = document.getElementById('baseTotalText');
+    const taxesSpan = document.getElementById('taxesText');
+    const grandTotalSpan = document.getElementById('grandTotalText');
+
+    const today = new Date().toISOString().split('T')[0];
+    checkInInput.min = today;
+
+    if (!checkInInput.value) {
+      checkInInput.value = today;
+    }
+
+    const tomorrow = new Date(checkInInput.value || today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+
+    checkOutInput.min = tomorrowStr;
+    if (!checkOutInput.value) {
+      checkOutInput.value = tomorrowStr;
+    }
+
+    // Function to calculate nights and totals
+    function updatePrice() {
+      const start = new Date(checkInInput.value);
+      const end = new Date(checkOutInput.value);
+      
+      const diffTime = end - start;
+      let nights = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (nights <= 0 || isNaN(nights)) {
+        nights = 1;
+      }
+
+      const subtotal = nights * pricePerNight;
+      const taxes = Math.round(subtotal * 0.12);
+      const grandTotal = subtotal + taxes;
+
+      baseCalcSpan.innerHTML = `₹${pricePerNight.toLocaleString('en-IN')} &times; ${nights} night${nights > 1 ? 's' : ''}`;
+      baseTotalSpan.innerText = `₹${subtotal.toLocaleString('en-IN')}`;
+      taxesSpan.innerText = `₹${taxes.toLocaleString('en-IN')}`;
+      grandTotalSpan.innerText = `₹${grandTotal.toLocaleString('en-IN')}`;
+    }
+
+    checkInInput.addEventListener('change', function() {
+      if (checkInInput.value) {
+        const nextDate = new Date(checkInInput.value);
+        nextDate.setDate(nextDate.getDate() + 1);
+        const nextDateStr = nextDate.toISOString().split('T')[0];
+        checkOutInput.min = nextDateStr;
+
+        if (checkOutInput.value <= checkInInput.value) {
+          checkOutInput.value = nextDateStr;
+        }
+        updatePrice();
+      }
+    });
+
+    checkOutInput.addEventListener('change', updatePrice);
+
+    // Initial calculation run
+    updatePrice();
+  });
+</script>
+{% endblock %}

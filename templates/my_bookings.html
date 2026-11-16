@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block title %}My Bookings | StayNest{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+
+  <!-- Header & Stats Overview -->
+  <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+    <div>
+      <h2 class="fw-bold mb-1 text-dark">
+        <i class="bi bi-journal-bookmark text-danger me-2"></i>My Reservations
+      </h2>
+      <p class="text-muted small mb-0">
+        Manage your upcoming stays, view vouchers, and review past trips.
+      </p>
+    </div>
+
+    <!-- Stats Badges -->
+    <div class="d-flex gap-2">
+      <div class="badge bg-white border text-dark p-2 px-3 shadow-sm d-flex align-items-center gap-2">
+        <span class="text-muted small">Total:</span>
+        <strong class="fs-6">{{ total_count }}</strong>
+      </div>
+      <div class="badge bg-white border border-success-subtle text-success p-2 px-3 shadow-sm d-flex align-items-center gap-2">
+        <span class="small">Confirmed:</span>
+        <strong class="fs-6">{{ confirmed_count }}</strong>
+      </div>
+      {% if cancelled_count > 0 %}
+        <div class="badge bg-white border border-danger-subtle text-danger p-2 px-3 shadow-sm d-flex align-items-center gap-2">
+          <span class="small">Cancelled:</span>
+          <strong class="fs-6">{{ cancelled_count }}</strong>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Bookings List -->
+  {% if bookings %}
+    <div class="d-flex flex-column gap-3">
+      {% for b in bookings %}
+      <div class="card border rounded-4 shadow-sm bg-white overflow-hidden">
+        <div class="row g-0">
+          
+          <!-- Hotel Image Column -->
+          <div class="col-md-3 position-relative">
+            <img src="{{ b['image_main'] }}" alt="{{ b['hotel_name'] }}" class="w-100 h-100" style="min-height: 190px; object-fit: cover;" onerror="this.onerror=null;this.src='/static/images/hotel_placeholder.svg';">
+            <span class="hotel-city-badge">
+              <i class="bi bi-geo-alt-fill me-1"></i>{{ b['city'] }}
+            </span>
+          </div>
+
+          <!-- Booking Details Center Column -->
+          <div class="col-md-6 p-4 d-flex flex-column justify-content-between">
+            <div>
+              <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="badge bg-light text-dark border small fw-bold">
+                  {{ b['booking_id'] }}
+                </span>
+                <small class="text-muted">Booked on {{ b['created_at'][:10] }}</small>
+              </div>
+
+              <h5 class="fw-bold mb-1 text-dark">
+                <a href="{{ url_for('hotel_detail', hotel_id=b['hotel_id']) }}" class="text-dark text-decoration-none hover-primary">
+                  {{ b['hotel_name'] }}
+                </a>
+              </h5>
+              <p class="text-muted small mb-3 text-truncate">
+                <i class="bi bi-signpost-2 me-1"></i>{{ b['address'] }}
+              </p>
+
+              <!-- Reservation Meta Grid -->
+              <div class="row g-2 small text-secondary">
+                <div class="col-sm-6">
+                  <i class="bi bi-calendar-event text-danger me-1"></i>
+                  <strong>Dates:</strong> {{ b['check_in'] }} &rarr; {{ b['check_out'] }}
+                </div>
+                <div class="col-sm-6">
+                  <i class="bi bi-people text-primary me-1"></i>
+                  <strong>Guests:</strong> {{ b['guests'] }} Adult{{ 's' if b['guests'] != 1 else '' }} (Deluxe Suite)
+                </div>
+                <div class="col-sm-12">
+                  <i class="bi bi-person-check text-success me-1"></i>
+                  <strong>Lead Guest:</strong> {{ b['guest_name'] }} ({{ b['guest_phone'] }})
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Price & Actions Right Column -->
+          <div class="col-md-3 p-4 bg-light border-start d-flex flex-column justify-content-between text-md-end">
+            <div>
+              <div class="mb-2">
+                {% if b['status'] == 'Confirmed' %}
+                  <span class="badge badge-status-confirmed px-3 py-2 fs-6">
+                    <i class="bi bi-check-circle-fill me-1"></i> Confirmed
+                  </span>
+                {% else %}
+                  <span class="badge badge-status-cancelled px-3 py-2 fs-6">
+                    <i class="bi bi-x-circle-fill me-1"></i> Cancelled
+                  </span>
+                {% endif %}
+              </div>
+              <div class="mb-2">
+                <span class="text-muted small d-block">Total Paid / Payable</span>
+                <span class="fs-4 fw-bold text-dark">₹{{ "{:,}".format(b['total_price']) }}</span>
+              </div>
+            </div>
+
+            <div class="d-flex flex-column gap-2 mt-3">
+              <a href="{{ url_for('booking_confirmation', booking_id=b['booking_id']) }}" class="btn btn-sm btn-outline-staynest w-100">
+                <i class="bi bi-receipt me-1"></i> View Voucher
+              </a>
+
+              {% if b['status'] == 'Confirmed' %}
+                <button type="button" class="btn btn-sm btn-outline-danger w-100" data-bs-toggle="modal" data-bs-target="#cancelModal_{{ b['id'] }}">
+                  <i class="bi bi-x-circle me-1"></i> Cancel Stay
+                </button>
+
+                <!-- Cancel Confirmation Modal -->
+                <div class="modal fade" id="cancelModal_{{ b['id'] }}" tabindex="-1" aria-labelledby="cancelModalLabel_{{ b['id'] }}" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content rounded-4 border-0 shadow">
+                      <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold text-dark" id="cancelModalLabel_{{ b['id'] }}">
+                          Cancel Reservation?
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body text-start py-3">
+                        <p class="text-muted mb-2">
+                          Are you sure you want to cancel your stay at <strong>{{ b['hotel_name'] }}</strong>?
+                        </p>
+                        <div class="p-3 bg-light rounded-3 small border mb-3">
+                          <div><strong>Booking ID:</strong> {{ b['booking_id'] }}</div>
+                          <div><strong>Dates:</strong> {{ b['check_in'] }} to {{ b['check_out'] }}</div>
+                          <div><strong>Refund Status:</strong> 100% Free Cancellation (No penalty charges)</div>
+                        </div>
+                        <p class="text-danger small mb-0">
+                          <i class="bi bi-exclamation-triangle-fill me-1"></i> Note: Once cancelled, these dates will be released and made available for other travelers.
+                        </p>
+                      </div>
+                      <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light border" data-bs-dismiss="modal">Keep Booking</button>
+                        <form action="{{ url_for('cancel_booking', booking_id=b['id']) }}" method="POST">
+                          <button type="submit" class="btn btn-danger">Confirm Cancellation</button>
+                        </form>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              {% else %}
+                <span class="small text-muted fst-italic">Dates released</span>
+              {% endif %}
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <!-- Empty State when user has no bookings -->
+    <div class="empty-state">
+      <div class="empty-state-icon text-muted opacity-50">
+        <i class="bi bi-calendar-x"></i>
+      </div>
+      <h4 class="fw-bold mb-2">No Bookings Found</h4>
+      <p class="text-muted mb-4 mx-auto" style="max-width: 500px;">
+        You haven't made any hotel reservations yet. Explore handpicked stays in Goa, Jaipur, Manali, Kerala, and across India!
+      </p>
+      <a href="{{ url_for('index') }}" class="btn btn-primary-staynest px-4 py-2">
+        <i class="bi bi-compass me-1"></i> Explore Available Stays
+      </a>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}
